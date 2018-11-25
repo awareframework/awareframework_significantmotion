@@ -14,27 +14,26 @@ class SignificantMotionSensor extends AwareSensorCore {
   static const EventChannel  _significantMotionEndStream  = const EventChannel("awareframework_significantmotion/event_on_significant_motion_end");
 
   /// Init Significantmotion Sensor with SignificantmotionSensorConfig
-  SignificantMotionSensor(SignificantmotionSensorConfig config):this.convenience(config);
+  SignificantMotionSensor(SignificantMotionSensorConfig config):this.convenience(config);
   SignificantMotionSensor.convenience(config) : super(config){
     /// Set sensor method & event channels
-    super.setSensorChannels(_significantMotionMethod, _significantMotionStream);
+    super.setMethodChannel(_significantMotionMethod);
   }
 
   /// A sensor observer instance
-  Stream<dynamic> get onSignificantMotionStart {
-    return _significantMotionStartStream.receiveBroadcastStream(["on_significant_motion_start"]);
+  Stream<dynamic> onSignificantMotionStart(String id) {
+    return super.getBroadcastStream(_significantMotionStartStream, "on_significant_motion_start", id);
   }
 
   /// A sensor observer instance
-  Stream<dynamic> get onSignificantMotionEnd {
-    return _significantMotionEndStream.receiveBroadcastStream(["on_significant_motion_end"]);
+  Stream<dynamic> onSignificantMotionEnd(String id) {
+    return super.getBroadcastStream(_significantMotionEndStream, "on_significant_motion_end", id);
   }
 }
 
-class SignificantmotionSensorConfig extends AwareSensorConfig{
-  SignificantmotionSensorConfig();
+class SignificantMotionSensorConfig extends AwareSensorConfig{
 
-  /// TODO
+  SignificantMotionSensorConfig();
 
   @override
   Map<String, dynamic> toMap() {
@@ -44,17 +43,18 @@ class SignificantmotionSensorConfig extends AwareSensorConfig{
 }
 
 /// Make an AwareWidget
-class SignificantmotionCard extends StatefulWidget {
-  SignificantmotionCard({Key key, @required this.sensor}) : super(key: key);
+class SignificantMotionCard extends StatefulWidget {
+  SignificantMotionCard({Key key, @required this.sensor, this.cardId = "significant_motion_card"}) : super(key: key);
 
   SignificantMotionSensor sensor;
+  String cardId;
 
   @override
-  SignificantmotionCardState createState() => new SignificantmotionCardState();
+  SignificantMotionCardState createState() => new SignificantMotionCardState();
 }
 
 
-class SignificantmotionCardState extends State<SignificantmotionCard> {
+class SignificantMotionCardState extends State<SignificantMotionCard> {
 
   String status = "Status: ";
 
@@ -63,13 +63,13 @@ class SignificantmotionCardState extends State<SignificantmotionCard> {
 
     super.initState();
     // set observer
-    widget.sensor.onSignificantMotionStart.listen((event) {
+    widget.sensor.onSignificantMotionStart(widget.cardId+"_start").listen((event) {
       setState((){
         status = "Significant Motion Start";
       });
     });
 
-    widget.sensor.onSignificantMotionEnd.listen((event) {
+    widget.sensor.onSignificantMotionEnd(widget.cardId+"_end").listen((event) {
       setState((){
         status = "Significant Motion End";
       });
@@ -88,6 +88,14 @@ class SignificantmotionCardState extends State<SignificantmotionCard> {
       title: "Significantmotion",
       sensor: widget.sensor
     );
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    widget.sensor.cancelBroadcastStream(widget.cardId+"_start");
+    widget.sensor.cancelBroadcastStream(widget.cardId+"_end");
+    super.dispose();
   }
 
 }

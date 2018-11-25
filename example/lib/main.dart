@@ -15,16 +15,18 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
 
   SignificantMotionSensor sensor;
-  SignificantmotionSensorConfig config;
+  SignificantMotionSensorConfig config;
 
   @override
   void initState() {
     super.initState();
 
-    config = SignificantmotionSensorConfig()
+    config = SignificantMotionSensorConfig()
       ..debug = true;
 
     sensor = new SignificantMotionSensor(config);
+
+    sensor.start();
 
   }
 
@@ -35,7 +37,7 @@ class _MyAppState extends State<MyApp> {
           appBar: new AppBar(
             title: const Text('Plugin Example App'),
           ),
-          body: new SignificantmotionCard(sensor: sensor,)
+          body: new SignificantMotionCard(sensor: sensor,)
       ),
     );
   }

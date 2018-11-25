@@ -31,17 +31,12 @@ public class SwiftAwareframeworkSignificantmotionPlugin: AwareFlutterPluginCore,
 
     public static func register(with registrar: FlutterPluginRegistrar) {
         let instance = SwiftAwareframeworkSignificantmotionPlugin()
-        // add own channel
-        super.setChannels(with: registrar,
-                          instance: instance,
-                          methodChannelName: "awareframework_significantmotion/method",
-                          eventChannelName: "awareframework_significantmotion/event")
+        super.setMethodChannel(with: registrar, instance: instance, channelName: "awareframework_significantmotion/method")
+        super.setEventChannels(with: registrar, instance: instance, channelNames:
+            ["awareframework_significantmotion/event",
+            "awareframework_significantmotion/event_on_significant_motion_start",
+            "awareframework_significantmotion/event_on_significant_motion_end"]);
 
-        let onStartStreamChannel = FlutterEventChannel.init(name: "awareframework_significantmotion/event_on_significant_motion_start", binaryMessenger: registrar.messenger())
-        let onEndStreamChannel = FlutterEventChannel.init(name: "awareframework_significantmotion/event_on_significant_motion_end", binaryMessenger: registrar.messenger())
-        
-        onStartStreamChannel.setStreamHandler(instance)
-        onEndStreamChannel.setStreamHandler(instance)
     }
 
     
