@@ -4,13 +4,55 @@ import 'package:flutter/services.dart';
 import 'package:awareframework_core/awareframework_core.dart';
 import 'package:flutter/material.dart';
 
-/// init sensor
-class SignificantMotionSensor extends AwareSensorCore {
+
+/// The SignificantMotion measures the acceleration applied to the sensor
+/// built-in into the device, including the force of gravity.
+///
+/// Your can initialize this class by the following code.
+/// ```dart
+/// var sensor = SignificantMotionSensor();
+/// ```
+///
+/// If you need to initialize the sensor with configurations,
+/// you can use the following code instead of the above code.
+/// ```dart
+/// var config =  SignificantMotionSensorConfig();
+/// config
+///   ..debug = true
+///   ..frequency = 100;
+///
+/// var sensor = SignificantMotionSensor.init(config);
+/// ```
+///
+/// Each sub class of AwareSensor provides the following method for controlling
+/// the sensor:
+/// - `start()`
+/// - `stop()`
+/// - `enable()`
+/// - `disable()`
+/// - `sync()`
+/// - `setLabel(String label)`
+///
+/// `Stream<dynamic>` allow us to monitor the sensor update
+/// events as follows:
+///
+/// ```dart
+/// sensor.onSignificantMotionStart.listen((event) {
+///   print(event)
+/// }
+/// ```
+///
+/// In addition, this package support data visualization function on Cart Widget.
+/// You can generate the Cart Widget by following code.
+/// ```dart
+/// var card = SignificantMotionCard(sensor: sensor);
+/// ```
+class SignificantMotionSensor extends AwareSensor {
   static const MethodChannel _significantMotionMethod =
     const MethodChannel('awareframework_significantmotion/method');
 
-  static const EventChannel  _significantMotionStream  =
-    const EventChannel('awareframework_significantmotion/event');
+  // static const EventChannel  _significantMotionStream  =
+  //  const EventChannel('awareframework_significantmotion/event');
 
   static const EventChannel  _significantMotionStartStream =
     const EventChannel("awareframework_significantmotion/event_on_significant_motion_start");
@@ -18,32 +60,103 @@ class SignificantMotionSensor extends AwareSensorCore {
   static const EventChannel  _significantMotionEndStream =
     const EventChannel("awareframework_significantmotion/event_on_significant_motion_end");
 
-  SignificantMotionSensor(SignificantMotionSensorConfig config):this.convenience(config);
-  SignificantMotionSensor.convenience(config) : super(config){
+
+  StreamController<dynamic> significantMotionStartStreamController = StreamController<dynamic>();
+  StreamController<dynamic> significantMotionEndStreamController = StreamController<dynamic>();
+
+  bool onSignificantMotion = false;
+
+  /// Init SignificantMotion Sensor without a configuration file
+  ///
+  /// ```dart
+  /// var sensor = SignificantMotionSensor.init(null);
+  /// ```
+  SignificantMotionSensor():this.init(null);
+
+  /// Init SignificantMotion Sensor with SignificantMotionSensorConfig
+  ///
+  /// ```dart
+  /// var config =  SignificantMotionSensorConfig();
+  /// config
+  ///   ..debug = true
+  ///   ..frequency = 100;
+  ///
+  /// var sensor = SignificantMotionSensor.init(config);
+  /// ```
+  SignificantMotionSensor.init(SignificantMotionSensorConfig config) : super(config){
     super.setMethodChannel(_significantMotionMethod);
   }
 
-  /// A sensor observer instance
+  /// An event channel for monitoring sensor events.
+  ///
+  /// `Stream<dynamic>` allow us to monitor the sensor update
+  /// events as follows:
+  ///
+  /// ```dart
+  /// sensor.onSignificantMotionStart.listen((event) {
+  ///
+  /// }
+  ///
   Stream<dynamic> get onSignificantMotionStart {
-    return super.getBroadcastStream(
-        _significantMotionStartStream, "on_significant_motion_start"
-    );
+    significantMotionStartStreamController.close();
+    significantMotionStartStreamController = StreamController<dynamic>();
+    return significantMotionStartStreamController.stream;
   }
 
-  /// A sensor observer instance
+  /// An event channel for monitoring sensor events.
+  ///
+  /// `Stream<dynamic>` allow us to monitor the sensor update
+  /// events as follows:
+  ///
+  /// ```dart
+  /// sensor.onSignificantMotionEnd.listen((event) {
+  ///   print(event)
+  /// }
+  ///
   Stream<dynamic> get onSignificantMotionEnd {
-    return super.getBroadcastStream(
-        _significantMotionEndStream, "on_significant_motion_end"
-    );
+    significantMotionEndStreamController.close();
+    significantMotionEndStreamController = StreamController<dynamic>();
+    return significantMotionEndStreamController.stream;
   }
 
   @override
-  void cancelAllEventChannels() {
+  Future<Null> start() {
+    super.getBroadcastStream(
+        _significantMotionStartStream, "on_significant_motion_start"
+    ).listen((event){
+      onSignificantMotion = true;
+      significantMotionStartStreamController.add(event);
+    });
+
+    super.getBroadcastStream(
+        _significantMotionEndStream, "on_significant_motion_end"
+    ).listen((event){
+      onSignificantMotion = false;
+      significantMotionEndStreamController.add(event);
+    });
+
+    return super.start();
+  }
+
+  @override
+  Future<Null> stop() {
     super.cancelBroadcastStream("on_significant_motion_start");
     super.cancelBroadcastStream("on_significant_motion_end");
+    return super.stop();
   }
 }
 
+
+/// A configuration class of SignificantMotionSensor
+///
+/// You can initialize the class by following code.
+///
+/// ```dart
+/// var config =  SignificantMotionSensorConfig();
+/// config
+///   ..debug = true
+///   ..frequency = 100;
+/// ```
 class SignificantMotionSensorConfig extends AwareSensorConfig{
 
   SignificantMotionSensorConfig();
@@ -55,7 +168,13 @@ class SignificantMotionSensorConfig extends AwareSensorConfig{
   }
 }
 
-/// Make an AwareWidget
+///
+/// A Card Widget of SignificantMotion Sensor
+///
+/// You can generate a Cart Widget by following code.
+/// ```dart
+/// var card = SignificantMotionCard(sensor: sensor);
+/// ```
 class SignificantMotionCard extends StatefulWidget {
   SignificantMotionCard({Key key, @required this.sensor}) : super(key: key);
 
@@ -65,7 +184,9 @@ class SignificantMotionCard extends StatefulWidget {
   SignificantMotionCardState createState() => new SignificantMotionCardState();
 }
 
-
+///
+/// A Card State of SignificantMotion Sensor
+///
 class SignificantMotionCardState extends State<SignificantMotionCard> {
 
   String status = "Status: ";
@@ -101,11 +222,4 @@ class SignificantMotionCardState extends State<SignificantMotionCard> {
       sensor: widget.sensor
     );
   }
-
-  @override
-  void dispose() {
-    widget.sensor.cancelAllEventChannels();
-    super.dispose();
-  }
-
 }

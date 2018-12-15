@@ -1,6 +1,8 @@
-# Aware Significantmotion
+# Aware Significant Motion
 
-TODO
+[![Build Status](https://travis-ci.org/awareframework/awareframework_significantmotion.svg?branch=master)](https://travis-ci.org/awareframework/awareframework_significantmotion)
+
+This sensor provides significant device motions.
 
 ## Install the plugin into project
 1. Edit `pubspec.yaml`
@@ -16,13 +18,14 @@ import 'package:awareframework_core/awareframework_core.dart';
 ```
 
 ## Public functions
-### significantmotion Sensor
+### Significant Motion Sensor
 - `start()`
 - `stop()` 
-- `sync(force: Boolean)`
+- `sync(bool force)`
 - `enable()`
 - `disable()`
 - `isEnable()`
+- `setLabel(String label)`
 
 ### Configuration Keys
 TODO
@@ -45,19 +48,26 @@ The data representations is different between Android and iOS. Following links p
 ## Example usage
 ```dart
 // init config
-var config = SignificantmotionSensorConfig()
+var config = SignificantMotionSensorConfig()
   ..debug = true
   ..label = "label";
 
 // init sensor
-var sensor = new SignificantmotionSensor(config);
+var sensor = new SignificantMotionSensor.init(config);
 
-void mathod(){
+void method(){
     /// start 
     sensor.start();
     
     /// set observer
-    sensor.onDataChanged.listen((Map<String,dynamic> result){
+    sensor.onSignificantMotionStart.listen((dynamic event){
+      setState((){
+        // Your code here
+      });
+    });
+
+    /// set observer
+    sensor.onSignificantMotionEnd.listen((dynamic event){
       setState((){
         // Your code here
       });
@@ -70,7 +80,7 @@ void mathod(){
     sensor.sync(true);  
     
     // make a sensor care by the following code
-    var card = new SignificantmotionCard(sensor:sensor);
+    var card = new SignificantMotionCard(sensor:sensor);
     // NEXT: Add the card instance into a target Widget.
 }
 
